@@ -1,40 +1,3 @@
-/*
- * Copyright (c) 2004, Oracle and/or its affiliates. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following
- * conditions are met:
- *
- * -Redistributions of source code must retain the above copyright
- *  notice, this list of conditions and the following disclaimer.
- *
- * -Redistribution in binary form must reproduce the above copyright
- *  notice, this list of conditions and the following disclaimer in
- *  the documentation and/or other materials provided with the
- *  distribution.
- *
- * Neither the name of Oracle nor the names of
- * contributors may be used to endorse or promote products derived
- * from this software without specific prior written permission.
- *
- * This software is provided "AS IS," without a warranty of any
- * kind. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND
- * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY
- * EXCLUDED. SUN MICROSYSTEMS, INC. ("SUN") AND ITS LICENSORS SHALL
- * NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF
- * USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS
- * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR
- * ANY LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT,
- * SPECIAL, CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER
- * CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF
- * THE USE OF OR INABILITY TO USE THIS SOFTWARE, EVEN IF SUN HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
- *
- * You acknowledge that Software is not designed, licensed or
- * intended for use in the design, construction, operation or
- * maintenance of any nuclear facility.
- */
 package example.hello;
 
 import java.rmi.registry.Registry;
@@ -46,27 +9,56 @@ public class Server implements Hello {
 
     public Server() {}
 
+    @Override
     public String sayHello() {
         return "Hello, world!";
     }
 
-    public int soma (int a, int b) {
+    @Override
+    public int soma(int a, int b) {
         return a + b;
     }
 
-    public static void main(String args[]) {
+    @Override
+    public double ln(double x) throws RemoteException {
+        if (x <= 0) {
+            throw new IllegalArgumentException("x deve ser positivo e maior que 0");
+        }
 
+        int k = 0;
+        while (x > 2) {
+            x /= Math.E;
+            k++;
+        }
+        while (x < 0.5) {
+            x *= Math.E;
+            k--;
+        }
+
+        double y = (x - 1) / (x + 1);
+        double y2 = y * y;
+        double term = y;
+        double sum = 0.0;
+
+        for (int n = 1; n <= 50; n += 2) {
+            sum += term / n;
+            term *= y2;
+        }
+
+        return 2 * sum + k;
+    }
+
+    public static void main(String[] args) {
         try {
             Server obj = new Server();
             Hello stub = (Hello) UnicastRemoteObject.exportObject(obj, 0);
 
-            // Bind the remote object's stub in the registry
             Registry registry = LocateRegistry.getRegistry();
             registry.rebind("Hello", stub);
 
             System.err.println("Server ready");
         } catch (Exception e) {
-            System.err.println("Server exception: " + e.toString());
+            System.err.println("Server exception: " + e);
             e.printStackTrace();
         }
     }
